@@ -4,6 +4,7 @@ date: "2021-01-04T02:08:49.260Z"
 description: ""
 categories: [rambles, pl-research, effectsjs]
 comments: true
+draft: true
 ---
 
 ## effectsjs, programming language research and what next.

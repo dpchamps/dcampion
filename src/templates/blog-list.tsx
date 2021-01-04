@@ -23,6 +23,7 @@ type Data = {
           title: string
           date: string
           description: string
+          draft: boolean
         }
         fields: {
           slug: string
@@ -38,7 +39,7 @@ const BlogIndex = ({
   pageContext,
 }: PageProps<Data, PageContext>) => {
   const siteTitle = data.site.siteMetadata.title
-  const posts = data.allMarkdownRemark.edges
+  const posts = data.allMarkdownRemark.edges.filter(x => !x.node.frontmatter.draft)
   const { currentPage, numPages } = pageContext
 
   const isFirst = currentPage === 1
@@ -130,6 +131,7 @@ export const pageQuery = graphql`
             date(formatString: "MMMM DD, YYYY")
             title
             description
+            draft
           }
         }
       }
