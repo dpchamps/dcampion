@@ -106,3 +106,7 @@ button {
     top: 0;
   }
 }
+
+.footnote-backref{
+  display: none;
+}
