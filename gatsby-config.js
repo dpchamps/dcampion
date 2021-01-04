@@ -8,7 +8,9 @@ module.exports = {
     },
     description: `A simple, fixed sidebar two columns Gatsby.js blog starter.`,
     siteUrl: `https://davecampion.com`,
-    social: {},
+    social: {
+      x: "dummy"
+    },
     defaultImage: "images/bg.jpeg",
   },
   plugins: [
