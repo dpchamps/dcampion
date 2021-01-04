@@ -62,11 +62,11 @@ module.exports = {
     {
       resolve: `gatsby-plugin-manifest`,
       options: {
-        name: `Ryz`,
-        short_name: `Ryz`,
+        name: `Dave Campion`,
+        short_name: `dpchamps`,
         start_url: `/`,
         background_color: `#ffffff`,
-        theme_color: `#663399`,
+        theme_color: `#996978`,
         display: `minimal-ui`,
         icon: `content/assets/gatsby-icon.png`,
       },
