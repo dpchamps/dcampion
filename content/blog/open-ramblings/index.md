@@ -4,7 +4,7 @@ date: "2021-01-04T02:08:49.260Z"
 description: ""
 categories: [rambles]
 comments: true
-draft: true
+draft: false
 ---
 
 ## effectsjs, programming language research and what next.
@@ -18,9 +18,9 @@ eye, followed shortly by Sam Galton's article [^2]. Yassine Elouafi's
 series [^3] was another great source of inspiration.
 
 All the while, Algebraic Effects had also been growing
-quite popular on the [r/ProgrammingLanguages](https://www.reddit.com/r/ProgrammingLanguages/) subreddit. 
+quite popular on the [r/ProgrammingLanguages](https://www.reddit.com/r/ProgrammingLanguages/) subreddit.
 There week or so where I would read a comment referencing them pretty much daily. The people on `r/ProgrammingLanguages`
-are truly awesome. It is hands down one of the best communities on reddit.  I was introduced to
+are truly awesome. It is hands down one of the best communities on reddit. I was introduced to
 [eff-lang](https://www.eff-lang.org/) through the community. I started hacking in Scheme.
 
 ### Digressing, Generators and Control Flow
@@ -33,23 +33,22 @@ generators provide to asynchronous abstractions.
 
 In general, I wanted to understand problems related to asynchronous control flow more completely.
 There was something that just didn't feel right about the ECMAScript `async/await` specification.
-I was unhappy with the way functions composed , and reflecting on several of the codebases that I'd been working on. 
-Reasoning about async code is a big pain point that I've observed in the wild. Smart people get it wrong and experienced 
+I was unhappy with the way functions composed , and reflecting on several of the codebases that I'd been working on.
+Reasoning about async code is a big pain point that I've observed in the wild. Smart people get it wrong and experienced
 devs can get tripped up.
 
 We've seen a few incarnations
-of async control flow, and subsequent best practices. 
+of async control flow, and subsequent best practices.
 ECMAThe need for some kind of sugar to write asynchronous code in a
 direct-style is very real. The introduction of
 [ES6 Harmony Generator Specification](http://wiki.ecmascript.org/doku.php?id=harmony:generators)
 spawned several projects to take advantage of the power generators unlocked (co
-[^5] and [^6] suspend for a few). We don't talk about generators that much as a community anymore, 
+[^5] and [^6] suspend for a few). We don't talk about generators that much as a community anymore,
 but I find them fascinating and woefully underused. They are arguably the most powerful primitive
 introduced to the language.
 
-
-There are some open questions that I have, in relation to the async idioms and data structures we 
-have in JS. I think that we deserve something better than `async/await` for writing direct-style asynchronous code. 
+There are some open questions that I have, in relation to the async idioms and data structures we
+have in JS. I think that we deserve something better than `async/await` for writing direct-style asynchronous code.
 There are better options, but can we ever have them in ECMAScript.
 
 This question is still on my mind. I _suspect_ that we could have something better.
@@ -66,10 +65,10 @@ appealing. My gut told me the transforms for generators would be more natural an
 to suspend and resume stackframes. I'm still confident that generators are the correct
 choice for building an effects system in javascript.
 
-### Programming Language Research
+### Programming Language Theory
 
 I've always _flirted_ with programming language design, but never really committed. Programming language
-_research_ really hadn't been on my radar up until this point. At the time I probably would've explained it 
+_research_ really hadn't been on my radar up until this point. At the time I probably would've explained it
 away as an esoteric academic pursuit. I never really considered it relevant to other things that I enjoyed.
 
 However, I decided that I wanted to build an effects system and draft ECMAScript specification to provide some sugar for
@@ -96,7 +95,7 @@ It of course has nothing to with functional interfaces, but with preserving the
 correct context as control is ceded to the callee such that the virtual stack
 remains whole. At it's heart, this is a conflict of two different control-flow
 styles. Further exacerbating the issue is that CPS-style code expects
-_continuations_, not generators or promises. You can't just perform willy-nilly and 
+_continuations_, not generators or promises. You can't just perform willy-nilly and
 expect seamless interop with other librarys.
 
 [So EffectsBoundary was introduced](https://github.com/effectsjs/effectsjs/pull/33)
@@ -114,58 +113,20 @@ meaningful way in the short term. It would've been totally possible to go on
 experimenting with the `EffectsBoundary` in place. But it's not good enough, and
 it killed my interest in the project for a while.
 
-### effectsjs Revival
+### Interests at large
 
-A QRD of the overall solution would
-go something like this: The effects runtime is implemented as a
-stateless interpreter. The state of the virtual stack is maintained by generator scope. 
-The transforms make no effort to thread that state
-through the existing program. 
-
-There are many reasons for making the interpreter
-stateless. `effectsjs` started as a bolt-on dream, with the goal of having as
-light of a touch as possible. Making the runtime globally-stateful is anathema
-to that goal.
-
-In my mind, the second we add global state behind the scenes is the
-second the project becomes an interesting quirk, but nothing much more. Debugging mutable global state shared between
-cooperatively scheduled tasks in the virtual stack seems _too hard._
-
-In the absence of maintaining global state, what we actually need is a more
-robust, heavier-handed compilation phase. Transforming the effects sugar needs
-to thread the virtual stack through the program as it's utilized. The overall
-solution almost definitely requires some code normalization and proper
-compilation techniques as opposed to the more ad-hoc transpilation approach that
-the project currently takes.
-
-Most of the work will be taking place here, issues are inflight. A second area
-for improvement is the actual grammar. The initial implementation borrowed from
-Dan Abramov's pontifications from the original article cited above. I am unhappy
-with this implementation overall and would much rather favor a functional,
-expression-based syntax. The similarities of `throw/catch` semantics are
-convenient for explaining the mechanics for uninitiated users, but the costs are
-far too high.
-
-### Interests at large, purpose of the new blog
-
-Contrary to most of the contents thus far, it's not my intention to only focus on effectsjs in this blog. 
-
-2020 has been a hard year for a lot of people. I wasn't an exception in this category, 
+2020 has been a hard year for a lot of people. I wasn't an exception in this category,
 though I do feel fortunate to have come out on the other end relatively
 unscathed. In the last week or so in doing some reflecting on where life has
 taken me so far, and where I would like to see it go-- the one thing I regret is
 not writing more.
 
-I learned a great many things over the last year. Interests around PL research
+I learned a great many things over the last year. Interests around PL theory
 have really gelled. Had I been writing about all of the info I soaked up along
 the way, about the Category Theory, Algebraic Data Structures, realizations and discoveries made around
-`effectsjs`, I'd be much farther along in my journey.
+`effectsjs`, I'd be much farther along.
 
-I'm not sure what kind of audience an obscure programming nerd-out blog has, but
-there's only one way to find out I suppose. At the very minimum I'll understand the topics 
-I'm interested in all of the better.
-
-[^1]:[Algebraic Effects for the Rest of Us](https://overreacted.io/algebraic-effects-for-the-rest-of-us)
+[^1]: [Algebraic Effects for the Rest of Us](https://overreacted.io/algebraic-effects-for-the-rest-of-us)
 [^2]: [Continuations Coroutines Fibers Effects](https://medium.com/yld-blog/continuations-coroutines-fibers-effects-e163dda9dedc)
 [^3]: [Algebraic Effects in Javascript](https://dev.to/yelouafi/algebraic-effects-in-javascript-part-1---continuations-and-control-transfer-3g88)
 [^4]: [General Theory of Reactivity](https://github.com/kriskowal/gtor)
