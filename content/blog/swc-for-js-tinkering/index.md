@@ -15,7 +15,7 @@ Pattern matching and algebraic data types were the first that came to mind. I go
 
 For `effectsjs`, I wrote all of those transformations with a Babel Fork. The Babel internals are familiar enough to me that I could start iterating and experimenting quickly on these new transforms.
 
-But I've been refraining doing anything with JS (or TS) because I see this project being a better candidate for Rust. For one, the Babel workflow is very slow. It's an older project, and I found the DX not very ergonomic. I'd like something _blazin_ fast, and to pass that speed down to the surely nonexistent customers using the language.
+But I've refrained from doing anything with JS (or TS) because I see this project being a better candidate for Rust. For one, the Babel workflow is very slow. It's an older project, and I found the DX not very ergonomic. I'd like something _blazin_ fast, and to pass that speed down to the surely nonexistent customers using the language.
 
 For another, I really like writing Rust and would like to write a bit more.
 
