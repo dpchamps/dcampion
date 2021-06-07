@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="UTF-8"?><rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title><![CDATA[Dave Campion]]></title><description><![CDATA[A simple, fixed sidebar two columns Gatsby.js blog starter.]]></description><link>https://davecampion.com</link><generator>GatsbyJS</generator><lastBuildDate>Mon, 07 Jun 2021 05:36:10 GMT</lastBuildDate><item><title><![CDATA[Using SWC For Extending JS]]></title><description><![CDATA[Last time, I talked about a toy language that could be an intersection of valid ECMAScript and a pure type-system. Aside from doing some…]]></description><link>https://davecampion.com/swc-for-js-tinkering/</link><guid isPermaLink="false">https://davecampion.com/swc-for-js-tinkering/</guid><pubDate>Mon, 07 Jun 2021 04:32:21 GMT</pubDate><content:encoded>&lt;p&gt;Last time, I talked about a toy language that could be an intersection of valid ECMAScript and a pure type-system.&lt;/p&gt;
+&lt;p&gt;Aside from doing some tinkering with what that type system might look like, I’ve been trying to imagine what &lt;em&gt;new&lt;/em&gt; types of constructs would exist in this language.&lt;/p&gt;
+&lt;p&gt;Pattern matching and algebraic data types were the first that came to mind. I got pretty excited thinking about how one might write the transforms for something similar to what rust &lt;code class=&quot;language-text&quot;&gt;enum&lt;/code&gt;s look like, and took a peak at the state of the &lt;a href=&quot;https://github.com/tc39/proposal-pattern-matching&quot;&gt;Stage 1 Pattern Matching Proposal&lt;/a&gt;. It’s alright.&lt;/p&gt;
+&lt;p&gt;For &lt;code class=&quot;language-text&quot;&gt;effectsjs&lt;/code&gt;, I wrote all of those transformations with a Babel Fork. The Babel internals are familiar enough to me that I could start iterating and experimenting quickly on these new transforms.&lt;/p&gt;
+&lt;p&gt;But I’ve refrained from doing anything with JS (or TS) because I see this project being a better candidate for Rust. For one, the Babel workflow is very slow. It’s an older project, and I found the DX not very ergonomic. I’d like something &lt;em&gt;blazin&lt;/em&gt; fast, and to pass that speed down to the surely nonexistent customers using the language.&lt;/p&gt;
+&lt;p&gt;For another, I really like writing Rust and would like to write a bit more.&lt;/p&gt;
+&lt;p&gt;I started to embark on this path from the ground up. I wrote a somewhat functional Javascript lexer last summer, and figured I could build on it.&lt;/p&gt;
+&lt;p&gt;But I picked it up a few times, from a few different angles and kind of came to this conclusion that, “geez, this is a ton of work to get started.” Kind of feeling like by the time that I’d have something satisfactory, all of the momentum of the initial project would be gone…&lt;/p&gt;
+&lt;p&gt;But then I had this thought, like &lt;em&gt;wait a minute, SWC exists!&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;So I’ve been spending some time familiarizing myself with the SWC codebase. It’s very impressive. At the moment it looks very promising for being able to do what I want. &lt;/p&gt;
+&lt;p&gt;The downside is that I’m trading speed for complexity. Though I’m decent at Rust, I don’t consider myself an expert — and the SWC codebase feels &lt;em&gt;very Rusty&lt;/em&gt; (in a good way!).&lt;/p&gt;
+&lt;p&gt;However, after a weekend of wading around— I think I’ve got a good enough grasp to take some baby steps. Seems like a natural progression would be to add a new token, get it to parse successfully, and then transpile it. Maybe even implement something like a curry operator. That seems easy enough. &lt;/p&gt;
+&lt;p&gt;Will report my findings in the next post. Perhaps even do a cross post to medium— who knows!&lt;/p&gt;</content:encoded></item><item><title><![CDATA[A Sound Type System for Javascript]]></title><description><![CDATA[About a month ago, a coworker was updating our team after syncing with a third-party vendor. Something they said stood out to me: We opted…]]></description><link>https://davecampion.com/javascript/</link><guid isPermaLink="false">https://davecampion.com/javascript/</guid><pubDate>Fri, 28 May 2021 15:18:08 GMT</pubDate><content:encoded>&lt;p&gt;About a month ago, a coworker was updating our team after syncing with a third-party vendor. Something they said stood out to me:&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;We opted to not use Typescript for [sensitive service] because we want a sound type system when writing sensitive code.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;It makes sense. But my first reaction was, “that’s kinda odd.” This is of course not a new idea. I write stuff in Rust all the time because of similar guarantees. However, so much critical software is written in Javascript that it just kind of feels odd to say out loud. &lt;/p&gt;
+&lt;p&gt;Probably the most important feature of the Typescript and Flow type-systems is that they are very close to JavaScript. Typescript calls itself a superset, and Flow calls itself a static type-checker. This feature separates them in a big way from the manifold compile-to-js alternatives by being much more palatable to users that have invested a ton of resources and time into web-based JavaScript applications.&lt;/p&gt;
+&lt;p&gt;Typescript’s famous line that hooked everyone is that “all Javascript is valid Typescript.” And I mean &lt;em&gt;c’mon&lt;/em&gt;. That is catchy.&lt;/p&gt;
+&lt;p&gt;However, &lt;a href=&quot;https://github.com/Microsoft/TypeScript/wiki/TypeScript-Design-Goals#non-goals&quot;&gt;A sound type system is a vocal non-goal of Typescript&lt;/a&gt;, &lt;a href=&quot;https://flow.org/en/docs/lang/types-and-expressions/#toc-soundness-and-completeness&quot;&gt;Flow cares very deeply about soundness, but still makes tradeoffs&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;&lt;a href=&quot;https://github.com/RyanCavanaugh&quot;&gt;Ryan Cavanaugh (TS Development Lead)&lt;/a&gt; describes how he views the problem in this &lt;em&gt;very spicy&lt;/em&gt; thread:&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;A fully-sound type system built on top of existing JS syntax is simply a fool’s errand; it cannot be done in a way that produces a usable programming language. Even Flow doesn’t do this (people will claim that it’s sound; it isn’t; they make trade-offs in this area as well). &lt;sup id=&quot;fnref-1&quot;&gt;&lt;a href=&quot;#fn-1&quot; class=&quot;footnote-ref&quot;&gt;1&lt;/a&gt;&lt;/sup&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;He then goes on to say some stuff that I would categorize as &lt;em&gt;even more controversial&lt;/em&gt;. Primarily, “JS runtime behavior is extremely hostile toward producing a usable sound type system.”&lt;/p&gt;
+&lt;p&gt;How very interesting. But also probably not entirely wrong. &lt;/p&gt;
+&lt;p&gt;Somewhat embarrassingly, I’ve been thinking about this 4 year old comment &lt;em&gt;a lot&lt;/em&gt; recently.&lt;/p&gt;
+&lt;h2&gt;Some Javascript is Valid [Type System]&lt;/h2&gt;
+&lt;p&gt;Hypothesis: there is some intersection of Javascript and [Type System] that is both sound and delightful to work with.&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;Note:&lt;/em&gt; This doesn’t have the same value proposition as Typescript (or Flow).&lt;/p&gt;
+&lt;p&gt;Whatever this language is, it should not posture as a direct competitor to either. Instead, it should been seen as a supplement for the people who want to work with a pure type system, and/or for the use-cases that demand it.&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;All javascript is valid Typescript&lt;/em&gt; is of course a bit of a gimmick. I love Typescript, and work with it professionally every day. In order to take the most advantage of the value-prop that TS offers, a user has to utilize a lot of the stuff that’s &lt;em&gt;different&lt;/em&gt; from JS. Similarly,this type system would do the same. Skilled users would learn these features to become experts in writing efficient sound code that compiled to Javascript.&lt;/p&gt;
+&lt;p&gt;In a perfect world, the workflow would be:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;You write Javascript&lt;/li&gt;
+&lt;li&gt;You follow clear compiler ( or language server ) errors until you have soundness.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;So what would that intersection look like? &lt;strong&gt;How much trimming would you have to do in order to start from something that wouldn’t be “a fool’s errand”?&lt;/strong&gt; On top of that, another very important question is, &lt;strong&gt;“what can we remove that isn’t either loved or ubiquitous in the JavaScript ecosystem?”&lt;/strong&gt;&lt;/p&gt;
+&lt;h2&gt;Ideas&lt;/h2&gt;
+&lt;p&gt;Here’s a list of things we might cut out, built off of nothing more than intuition, and my observations as a platform engineer for a very website.&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;code class=&quot;language-text&quot;&gt;null&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code class=&quot;language-text&quot;&gt;undefined&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code class=&quot;language-text&quot;&gt;NaN&lt;/code&gt; (?)&lt;/li&gt;
+&lt;li&gt;implicit coercion&lt;/li&gt;
+&lt;li&gt;&lt;code class=&quot;language-text&quot;&gt;delete&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code class=&quot;language-text&quot;&gt;for..in&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code class=&quot;language-text&quot;&gt;let&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code class=&quot;language-text&quot;&gt;var&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code class=&quot;language-text&quot;&gt;getters/setters&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code class=&quot;language-text&quot;&gt;class&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code class=&quot;language-text&quot;&gt;throw&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code class=&quot;language-text&quot;&gt;prototypical inheritance&lt;/code&gt; (?)&lt;/li&gt;
+&lt;li&gt;&lt;code class=&quot;language-text&quot;&gt;new&lt;/code&gt; (?)&lt;/li&gt;
+&lt;li&gt;&lt;code class=&quot;language-text&quot;&gt;instance of&lt;/code&gt; (?)&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;&lt;code class=&quot;language-text&quot;&gt;(?)&lt;/code&gt; Denoting the union of, “should it” and “I want it to go away, but don’t know if it can”.&lt;/p&gt;
+&lt;h3&gt;&lt;code class=&quot;language-text&quot;&gt;let&lt;/code&gt; and not &lt;code class=&quot;language-text&quot;&gt;const&lt;/code&gt;.&lt;/h3&gt;
+&lt;p&gt;This is a design decision based on the &lt;a href=&quot;https://eslint.org/docs/rules/prefer-const&quot;&gt;idiom to prefer const&lt;/a&gt;. The idea is to provide something that’s relatable to JS devs. The more comfortable it feels, the easier it is to adopt.&lt;/p&gt;
+&lt;h3&gt;&lt;code class=&quot;language-text&quot;&gt;null&lt;/code&gt; and &lt;code class=&quot;language-text&quot;&gt;undefined&lt;/code&gt;&lt;/h3&gt;
+&lt;p&gt;If you ask JS devs what the difference between &lt;code class=&quot;language-text&quot;&gt;null&lt;/code&gt; and &lt;code class=&quot;language-text&quot;&gt;undefined&lt;/code&gt; are, they’ll likely same something along the lines of, “null is an assignment value, and undefined represents lack of assignment.”&lt;/p&gt;
+&lt;p&gt;I think I would claim that the two concepts meaningless to disambiguate, and are statically unenforceable, though I haven’t given much thought to the latter part.&lt;/p&gt;
+&lt;p&gt;We can do without nully and undefined values, which are part and parcel of the errand that said fool is embarking on — so get rid of ‘em.&lt;/p&gt;
+&lt;h3&gt;prototypical inheritance, &lt;code class=&quot;language-text&quot;&gt;new&lt;/code&gt;, &lt;code class=&quot;language-text&quot;&gt;instance of&lt;/code&gt; and &lt;code class=&quot;language-text&quot;&gt;class&lt;/code&gt;&lt;/h3&gt;
+&lt;p&gt;Prototypical inheritance is a cool idea. It’s unfortunately a big source of confusion in the language. Kyle Simpson of the &lt;em&gt;You Don’t Know JS&lt;/em&gt; series makes a case for “Delegation-Oriented” Design in “this &amp;#x26; Object Prototypes.” This pattern probably would’ve been nicer than the pattern of classes that got popular, but nonetheless, it never caught on as an idiom.&lt;/p&gt;
+&lt;p&gt;Because of that, there was never really impetus to make that code syntactically more palatable. At the end of the day, stuff like this is likely to make most JS Devs go “wait, wut?”&lt;/p&gt;
+&lt;div class=&quot;gatsby-highlight&quot; data-language=&quot;javascript&quot;&gt;&lt;pre class=&quot;language-javascript&quot;&gt;&lt;code class=&quot;language-javascript&quot;&gt;&lt;span class=&quot;token keyword&quot;&gt;const&lt;/span&gt; Task &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;token function&quot;&gt;create&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token parameter&quot;&gt;date&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;token keyword&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;id &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; Math&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;token function&quot;&gt;random&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;;&lt;/span&gt;
+        &lt;span class=&quot;token keyword&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;dueDate &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; date&lt;span class=&quot;token punctuation&quot;&gt;;&lt;/span&gt;
+    &lt;span class=&quot;token punctuation&quot;&gt;}&lt;/span&gt;
+    &lt;span class=&quot;token function&quot;&gt;print&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;{&lt;/span&gt; console&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;token function&quot;&gt;log&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token keyword&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;id&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;token keyword&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;date&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;token punctuation&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;token keyword&quot;&gt;const&lt;/span&gt; GetMilk &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; Object&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;token function&quot;&gt;create&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;Task&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;;&lt;/span&gt;
+
+GetMilk&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;token function&quot;&gt;create&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token string&quot;&gt;&quot;tomorrow&quot;&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;;&lt;/span&gt;
+GetMilk&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;token function&quot;&gt;print&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Intuitively, I feel that the people who recognize the benefits of writing code with a sound type system intersect with the FP community within Javascript and are likely to feel at-home with these features removed.&lt;/p&gt;
+&lt;p&gt;For the rest, it should at least not be shocking to see. Patterns for encapsulation of data are as old as &lt;a href=&quot;https://addyosmani.com/resources/essentialjsdesignpatterns/book/&quot;&gt;Addy Osmani’s JavaScript Design Patterns&lt;/a&gt;, and &lt;a href=&quot;https://www.oreilly.com/library/view/javascript-the-good/9780596517748/&quot;&gt;Douglas Crockford’s JavaScript: The Good Parts&lt;/a&gt;. &lt;/p&gt;
+&lt;h3&gt;What about the other stuff?&lt;/h3&gt;
+&lt;p&gt;A detailed justification for each of these features (including those that I outlined above) deserve separate posts.&lt;/p&gt;
+&lt;p&gt;Anyway, all of this is just a &lt;em&gt;kernel&lt;/em&gt; of an idea. It’s a rough sketch of mental notes, and some actual notes that I’ve taken to organize thoughts about this central hypothesis. &lt;/p&gt;
+&lt;p&gt;It’s as far as I’ve gotten, which is admittedly not very far at all!&lt;/p&gt;
+&lt;div class=&quot;footnotes&quot;&gt;
+&lt;hr&gt;
+&lt;ol&gt;
+&lt;li id=&quot;fn-1&quot;&gt;
+&lt;p&gt;&lt;a href=&quot;https://github.com/microsoft/TypeScript/issues/9825#issuecomment-306272034&quot;&gt;https://github.com/microsoft/TypeScript/issues/9825#issuecomment-306272034&lt;/a&gt;&lt;/p&gt;
+&lt;a href=&quot;#fnref-1&quot; class=&quot;footnote-backref&quot;&gt;↩&lt;/a&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/div&gt;</content:encoded></item><item><title><![CDATA[Ramblings for the New Year]]></title><description><![CDATA[effectsjs, programming language research and what next. A new blog, a new year. A little over a year ago algebraic effects were hot. It was…]]></description><link>https://davecampion.com/open-ramblings/</link><guid isPermaLink="false">https://davecampion.com/open-ramblings/</guid><pubDate>Mon, 04 Jan 2021 02:08:49 GMT</pubDate><content:encoded>&lt;h2&gt;effectsjs, programming language research and what next.&lt;/h2&gt;
+&lt;h3&gt;A new blog, a new year.&lt;/h3&gt;
+&lt;p&gt;A little over a year ago algebraic effects were &lt;em&gt;hot&lt;/em&gt;.&lt;/p&gt;
+&lt;p&gt;It was probably Dan Abramov’s article&lt;sup id=&quot;fnref-1&quot;&gt;&lt;a href=&quot;#fn-1&quot; class=&quot;footnote-ref&quot;&gt;1&lt;/a&gt;&lt;/sup&gt; that first caught my
+eye, followed shortly by Sam Galton’s article &lt;sup id=&quot;fnref-2&quot;&gt;&lt;a href=&quot;#fn-2&quot; class=&quot;footnote-ref&quot;&gt;2&lt;/a&gt;&lt;/sup&gt;. Yassine Elouafi’s
+series &lt;sup id=&quot;fnref-3&quot;&gt;&lt;a href=&quot;#fn-3&quot; class=&quot;footnote-ref&quot;&gt;3&lt;/a&gt;&lt;/sup&gt; was another great source of inspiration.&lt;/p&gt;
+&lt;p&gt;All the while, Algebraic Effects had also been growing
+quite popular on the &lt;a href=&quot;https://www.reddit.com/r/ProgrammingLanguages/&quot;&gt;r/ProgrammingLanguages&lt;/a&gt; subreddit.
+There week or so where I would read a comment referencing them pretty much daily. The people on &lt;code class=&quot;language-text&quot;&gt;r/ProgrammingLanguages&lt;/code&gt;
+are truly awesome. It is hands down one of the best communities on reddit. I was introduced to
+&lt;a href=&quot;https://www.eff-lang.org/&quot;&gt;eff-lang&lt;/a&gt; through the community. I started hacking in Scheme.&lt;/p&gt;
+&lt;h3&gt;Digressing, Generators and Control Flow&lt;/h3&gt;
+&lt;p&gt;Completely unrelated, I’d also been really into generators around
+that time. This interest had been sparked from two different sources: the
+wonderful &lt;a href=&quot;https://doc.rust-lang.org/std/iter/trait.Iterator.html&quot;&gt;standard library abstractions&lt;/a&gt; that Rust provides, and a
+rediscovery of Kris Kowal’s GTOR &lt;sup id=&quot;fnref-4&quot;&gt;&lt;a href=&quot;#fn-4&quot; class=&quot;footnote-ref&quot;&gt;4&lt;/a&gt;&lt;/sup&gt;. Specifically, I intrigued by the usefulness
+generators provide to asynchronous abstractions.&lt;/p&gt;
+&lt;p&gt;In general, I wanted to understand problems related to asynchronous control flow more completely.
+There was something that just didn’t feel right about the ECMAScript &lt;code class=&quot;language-text&quot;&gt;async/await&lt;/code&gt; specification.
+I was unhappy with the way functions composed , and reflecting on several of the codebases that I’d been working on.
+Reasoning about async code is a big pain point that I’ve observed in the wild. Smart people get it wrong and experienced
+devs can get tripped up.&lt;/p&gt;
+&lt;p&gt;We’ve seen a few incarnations
+of async control flow, and subsequent best practices.
+ECMAThe need for some kind of sugar to write asynchronous code in a
+direct-style is very real. The introduction of
+&lt;a href=&quot;http://wiki.ecmascript.org/doku.php?id=harmony:generators&quot;&gt;ES6 Harmony Generator Specification&lt;/a&gt;
+spawned several projects to take advantage of the power generators unlocked (co
+&lt;sup id=&quot;fnref-5&quot;&gt;&lt;a href=&quot;#fn-5&quot; class=&quot;footnote-ref&quot;&gt;5&lt;/a&gt;&lt;/sup&gt; and &lt;sup id=&quot;fnref-6&quot;&gt;&lt;a href=&quot;#fn-6&quot; class=&quot;footnote-ref&quot;&gt;6&lt;/a&gt;&lt;/sup&gt; suspend for a few). We don’t talk about generators that much as a community anymore,
+but I find them fascinating and woefully underused. They are arguably the most powerful primitive
+introduced to the language.&lt;/p&gt;
+&lt;p&gt;There are some open questions that I have, in relation to the async idioms and data structures we
+have in JS. I think that we deserve something better than &lt;code class=&quot;language-text&quot;&gt;async/await&lt;/code&gt; for writing direct-style asynchronous code.
+There are better options, but can we ever have them in ECMAScript.&lt;/p&gt;
+&lt;p&gt;This question is still on my mind. I &lt;em&gt;suspect&lt;/em&gt; that we could have something better.&lt;/p&gt;
+&lt;h3&gt;effectsjs&lt;/h3&gt;
+&lt;p&gt;Shortly after reading Sam Galton’s article, I was fully on board with algebraic
+effects and wanted them in ECMAScript. I knew that there was overall two
+major approaches to creating an effects system in JS: &lt;code class=&quot;language-text&quot;&gt;throw/catch&lt;/code&gt;
+semantics, and generators. After reading a few papers, the
+&lt;code class=&quot;language-text&quot;&gt;throw/catch&lt;/code&gt; approach seemed inadequate due to that high level of abuse
+required for hijacking the call stack. Generators seemed much more
+appealing. My gut told me the transforms for generators would be more natural and more appropriate given that they exist
+to suspend and resume stackframes. I’m still confident that generators are the correct
+choice for building an effects system in javascript.&lt;/p&gt;
+&lt;h3&gt;Programming Language Theory&lt;/h3&gt;
+&lt;p&gt;I’ve always &lt;em&gt;flirted&lt;/em&gt; with programming language design, but never really committed. Programming language
+&lt;em&gt;research&lt;/em&gt; really hadn’t been on my radar up until this point. At the time I probably would’ve explained it
+away as an esoteric academic pursuit. I never really considered it relevant to other things that I enjoyed.&lt;/p&gt;
+&lt;p&gt;However, I decided that I wanted to build an effects system and draft ECMAScript specification to provide some sugar for
+the mess of generator code that I was sure would follow. I had this general
+inclination that being able to write non-color-changing direct-style
+asynchronous programming, would be a game-changer. But in order
+to test that hypothesis, I’d need to be able to write some code. And in order to
+do that, I’d need to draft a specification and write some
+transformations to a modified Babel fork.&lt;/p&gt;
+&lt;p&gt;Thus, &lt;a href=&quot;https://github.com/effectsjs/effectsjs&quot;&gt;effectsjs&lt;/a&gt; was born and I
+accidentally stumbled into doing amateur programming language research.&lt;/p&gt;
+&lt;h3&gt;Project woes&lt;/h3&gt;
+&lt;p&gt;The biggest challenge presented itself with
+&lt;a href=&quot;https://github.com/effectsjs/effectsjs/issues/19&quot;&gt;this issue&lt;/a&gt;. It is the first
+indication I think that something wasn’t quite right with the first iteration of
+the project. The short of it is that for something written in continuation
+passing style (CPS for short), the continuation getting passed &lt;em&gt;can not&lt;/em&gt; not
+perform without some state and being converted into a Promise. This problem is far-reaching.&lt;/p&gt;
+&lt;p&gt;It of course has nothing to with functional interfaces, but with preserving the
+correct context as control is ceded to the callee such that the virtual stack
+remains whole. At it’s heart, this is a conflict of two different control-flow
+styles. Further exacerbating the issue is that CPS-style code expects
+&lt;em&gt;continuations&lt;/em&gt;, not generators or promises. You can’t just perform willy-nilly and
+expect seamless interop with other librarys.&lt;/p&gt;
+&lt;p&gt;&lt;a href=&quot;https://github.com/effectsjs/effectsjs/pull/33&quot;&gt;So EffectsBoundary was introduced&lt;/a&gt;
+to sort of patch over these problems. However, the boundary solve never really
+sat well with me. It’s not very elegant, requires too much buy-in and syntax
+to do normal things. Worst of all, it requires the consumer to be acutely aware
+of the effects-system. Effects are no longer this wonderful sugary prose that
+allow you to isolate dependencies and mutations in a meaningful way. Instead,
+the &lt;code class=&quot;language-text&quot;&gt;perform&lt;/code&gt; keyword becomes a burden. One must apply mental gymnastics in
+order to use it correctly. “Do I need to use an &lt;code class=&quot;language-text&quot;&gt;EffectsBoundary&lt;/code&gt; here?”, “Where
+is the virtual stack right now?” and so on…&lt;/p&gt;
+&lt;p&gt;Having said all of that, the effects boundary was not all bad. It actually solved the problem in a
+meaningful way in the short term. It would’ve been totally possible to go on
+experimenting with the &lt;code class=&quot;language-text&quot;&gt;EffectsBoundary&lt;/code&gt; in place. But it’s not good enough, and
+it killed my interest in the project for a while.&lt;/p&gt;
+&lt;h3&gt;Interests at large&lt;/h3&gt;
+&lt;p&gt;2020 has been a hard year for a lot of people. I wasn’t an exception in this category,
+though I do feel fortunate to have come out on the other end relatively
+unscathed. In the last week or so in doing some reflecting on where life has
+taken me so far, and where I would like to see it go— the one thing I regret is
+not writing more.&lt;/p&gt;
+&lt;p&gt;I learned a great many things over the last year. Interests around PL theory
+have really gelled. Had I been writing about all of the info I soaked up along
+the way, about the Category Theory, Algebraic Data Structures, realizations and discoveries made around
+&lt;code class=&quot;language-text&quot;&gt;effectsjs&lt;/code&gt;, I’d be much farther along.&lt;/p&gt;
+&lt;div class=&quot;footnotes&quot;&gt;
+&lt;hr&gt;
+&lt;ol&gt;
+&lt;li id=&quot;fn-1&quot;&gt;
+&lt;p&gt;&lt;a href=&quot;https://overreacted.io/algebraic-effects-for-the-rest-of-us&quot;&gt;Algebraic Effects for the Rest of Us&lt;/a&gt;&lt;/p&gt;
+&lt;a href=&quot;#fnref-1&quot; class=&quot;footnote-backref&quot;&gt;↩&lt;/a&gt;
+&lt;/li&gt;
+&lt;li id=&quot;fn-2&quot;&gt;
+&lt;p&gt;&lt;a href=&quot;https://medium.com/yld-blog/continuations-coroutines-fibers-effects-e163dda9dedc&quot;&gt;Continuations Coroutines Fibers Effects&lt;/a&gt;&lt;/p&gt;
+&lt;a href=&quot;#fnref-2&quot; class=&quot;footnote-backref&quot;&gt;↩&lt;/a&gt;
+&lt;/li&gt;
+&lt;li id=&quot;fn-3&quot;&gt;
+&lt;p&gt;&lt;a href=&quot;https://dev.to/yelouafi/algebraic-effects-in-javascript-part-1---continuations-and-control-transfer-3g88&quot;&gt;Algebraic Effects in Javascript&lt;/a&gt;&lt;/p&gt;
+&lt;a href=&quot;#fnref-3&quot; class=&quot;footnote-backref&quot;&gt;↩&lt;/a&gt;
+&lt;/li&gt;
+&lt;li id=&quot;fn-4&quot;&gt;
+&lt;p&gt;&lt;a href=&quot;https://github.com/kriskowal/gtor&quot;&gt;General Theory of Reactivity&lt;/a&gt;&lt;/p&gt;
+&lt;a href=&quot;#fnref-4&quot; class=&quot;footnote-backref&quot;&gt;↩&lt;/a&gt;
+&lt;/li&gt;
+&lt;li id=&quot;fn-5&quot;&gt;
+&lt;p&gt;&lt;a href=&quot;https://github.com/tj/co&quot;&gt;co&lt;/a&gt;&lt;/p&gt;
+&lt;a href=&quot;#fnref-5&quot; class=&quot;footnote-backref&quot;&gt;↩&lt;/a&gt;
+&lt;/li&gt;
+&lt;li id=&quot;fn-6&quot;&gt;
+&lt;p&gt;&lt;a href=&quot;https://github.com/jmar777/suspend&quot;&gt;suspend&lt;/a&gt;&lt;/p&gt;
+&lt;a href=&quot;#fnref-6&quot; class=&quot;footnote-backref&quot;&gt;↩&lt;/a&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/div&gt;</content:encoded></item></channel></rss>
