@@ -178,7 +178,7 @@ declare function get<
 
 Let's start by breaking `UnpackPack` down:
 
-We're using a similar technique to what's been covered so far: establish a base case and establish a recursive step. Compute the tail of a tuple, and winnow the initial tuple down to an empty case.
+We're using a similar technique to what's been covered so far: establish a base case and establish a recursive step. Compute the tail of a tuple, and reduce the initial tuple down to an empty case.
 
 We take anything as the type's first parameter, and a tuple that will indicate properties to recursively lens into the first value.
 
